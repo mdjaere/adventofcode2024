@@ -8,10 +8,11 @@ R = len(data)
 C = len(data[0])
 
 
-def count_sides_and_corners(field):
+def count_sides_and_corners(field, r_min, r_max, c_min, c_max):
+    # Modified marching squares
     corner_count = 0
     side_count = 0
-    for ri, ci in product(range(-1, R), range(-1, C)):
+    for ri, ci in product(range(r_min - 1, r_max + 1), range(c_min - 1, c_max + 1)):
         read_area = tuple(
             (ri + x, ci + y) in field for x, y in [(0, 0), (1, 0), (0, 1), (1, 1)]
         )
@@ -38,6 +39,7 @@ for ri, ci in product(range(R), range(C)):
     seen.add((ri, ci))
     current_value = data[ri][ci]
     current_field = [(ri, ci)]
+    r_min, r_max, c_min, c_max = ri, ri, ci, ci
     to_search = [(ri, ci)]
     while to_search:
         s_ri, s_ci = to_search.pop()
@@ -47,9 +49,17 @@ for ri, ci in product(range(R), range(C)):
             if data[n_ri][n_ci] != current_value or (n_ri, n_ci) in seen:
                 continue
             current_field.append((n_ri, n_ci))
+            r_min, r_max, c_min, c_max = (
+                min(r_min, n_ri),
+                max(r_max, n_ri),
+                min(c_min, n_ci),
+                max(c_max, n_ci),
+            )
             seen.add((n_ri, n_ci))
             to_search.append((n_ri, n_ci))
-    side_count, corner_count = count_sides_and_corners(current_field)
+    side_count, corner_count = count_sides_and_corners(
+        current_field, r_min, r_max, c_min, c_max
+    )
     sorted_fields.append((len(current_field), side_count, corner_count))
 
 part_1 = sum(f * (s + c) for f, s, c in sorted_fields)
